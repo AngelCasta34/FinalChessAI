@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cctype>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 
@@ -51,6 +52,7 @@ void Chess::setUpBoard()
     _gameOptions.rowY = 8;
     _gameOptions.AIMAXDepth = 4;   // search 4 plies deep
 
+    _positionCount.clear();
     _grid->initializeChessSquares(pieceSize, "boardsquare.png");
     FENtoBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
 
@@ -492,7 +494,13 @@ Player* Chess::checkForWinner()
 
 bool Chess::checkForDraw()
 {
-    return false;
+    // Threefold repetition
+    std::string pos = stateString();
+    if (_positionCount[pos] >= 3) return true;
+
+    // Stalemate: current player has no legal moves but game isn't over via king capture
+    regenerateLegalMoves();
+    return _legalMoves.empty();
 }
 
 std::string Chess::initialStateString()
@@ -578,7 +586,7 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst)
     if (toIdx == 7)  _castlingRights &= ~4;
     if (toIdx == 0)  _castlingRights &= ~8;
 
-    // PROMOTION 
+    // PROMOTION
     if (piece == Pawn && ((isWhite && toY == 0) || (!isWhite && toY == 7)))
     {
         int playerNum = isWhite ? 0 : 1;
@@ -586,6 +594,9 @@ void Chess::bitMovedFromTo(Bit& bit, BitHolder& src, BitHolder& dst)
         if (dstSq)
             dstSq->setBit(PieceForPlayer(playerNum, Queen));
     }
+
+    // Record position for repetition detection
+    _positionCount[stateString()]++;
 
     endTurn();
 }
@@ -904,17 +915,24 @@ void Chess::executeAIMove(const BitMove& move)
     dst->setBit(bit);
 
     bitMovedFromTo(*bit, *src, *dst);   // calls endTurn()
+    regenerateLegalMoves();             // sync _whiteToMove with the new current player
 }
 
 // updateAI – called every frame while it is the AI player's turn
 void Chess::updateAI()
 {
+    _lastAIMove = BitMove(); // Reset last AI move
+
     bool whiteToMove = (getCurrentPlayer()->playerNumber() == 0);
+    _whiteToMove = whiteToMove; // keep in sync for getFEN()
     int depth = (_gameOptions.AIMAXDepth > 0) ? _gameOptions.AIMAXDepth : 4;
 
     BoardArray board = boardToArray();
     auto moves = generateMovesForArray(board, whiteToMove);
-    if (moves.empty()) return;
+    if (moves.empty()) {
+        endTurn();   // trigger EndOfTurn checkForWinner / checkForDraw (stalemate)
+        return;
+    }
 
     int bestScore = -1000000;
     BitMove bestMove = moves[0];
@@ -935,5 +953,102 @@ void Chess::updateAI()
         }
     }
 
+    _lastAIMove = bestMove;
     executeAIMove(bestMove);
+}
+
+// Tournament support: Set board from FEN and reinitialize game state for AI
+void Chess::setBoardFromFEN(const std::string& fen) {
+    std::string piecePlacement = fen;
+    std::string activeColor = "w";
+    std::string castling = "KQkq";
+    std::string enPassant = "-";
+
+    // Check if this is a full FEN string (has spaces)
+    size_t spacePos = fen.find(' ');
+    if (spacePos != std::string::npos) {
+        std::istringstream fenStream(fen);
+        fenStream >> piecePlacement >> activeColor >> castling >> enPassant;
+    }
+
+    // Set visual board from piece placement
+    FENtoBoard(piecePlacement);
+
+    // Adjust currentTurnNo so getCurrentPlayer() matches the FEN active color.
+    // updateAI() reads from getCurrentPlayer(), so this ensures it generates
+    // moves for the correct side.
+    bool fenWhiteToMove = (activeColor == "w" || activeColor == "W");
+    bool currentIsWhite = (getCurrentPlayer()->playerNumber() == 0);
+    if (currentIsWhite != fenWhiteToMove) {
+        _gameOptions.currentTurnNo++;  // flip to the other player
+    }
+
+    // regenerateLegalMoves will now set _whiteToMove from getCurrentPlayer()
+    regenerateLegalMoves();
+
+    std::cout << "[Tournament] Board set from FEN. Player: "
+              << (_whiteToMove ? "White" : "Black")
+              << ", Legal moves: " << _legalMoves.size() << std::endl;
+}
+
+// Tournament support: Generate FEN string from current board
+// Note: in our grid, y=0 is rank 8 (black's back rank) and y=7 is rank 1 (white's back rank)
+std::string Chess::getFEN() const {
+    std::string fen;
+    fen.reserve(90);
+
+    // Piece placement (from rank 8 to rank 1, i.e. y=0 to y=7)
+    for (int y = 0; y < 8; ++y) {
+        int emptyCount = 0;
+        for (int x = 0; x < 8; ++x) {
+            char piece = pieceNotation(x, y);
+            if (piece == '0') {
+                emptyCount++;
+            } else {
+                if (emptyCount > 0) {
+                    fen += std::to_string(emptyCount);
+                    emptyCount = 0;
+                }
+                fen += piece;
+            }
+        }
+        if (emptyCount > 0) {
+            fen += std::to_string(emptyCount);
+        }
+        if (y < 7) {
+            fen += '/';
+        }
+    }
+
+    // Active color
+    fen += ' ';
+    fen += _whiteToMove ? 'w' : 'b';
+
+    // Castling availability (check piece positions; y=7 is rank 1, y=0 is rank 8)
+    fen += ' ';
+    std::string castleStr;
+    char e1 = pieceNotation(4, 7);  // e1 white king start
+    char a1 = pieceNotation(0, 7);  // a1
+    char h1 = pieceNotation(7, 7);  // h1
+    if (e1 == 'K') {
+        if (h1 == 'R') castleStr += 'K';
+        if (a1 == 'R') castleStr += 'Q';
+    }
+    char e8 = pieceNotation(4, 0);  // e8 black king start
+    char a8 = pieceNotation(0, 0);  // a8
+    char h8 = pieceNotation(7, 0);  // h8
+    if (e8 == 'k') {
+        if (h8 == 'r') castleStr += 'k';
+        if (a8 == 'r') castleStr += 'q';
+    }
+    fen += castleStr.empty() ? "-" : castleStr;
+
+    // En passant target square (simplified)
+    fen += " -";
+
+    // Halfmove clock and fullmove number (simplified)
+    fen += " 0";
+    fen += " 1";
+
+    return fen;
 }

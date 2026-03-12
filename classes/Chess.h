@@ -5,6 +5,7 @@
 #include "Grid.h"
 #include <vector>
 #include <array>
+#include <map>
 
 
 constexpr int pieceSize = 80;
@@ -52,6 +53,13 @@ public:
     bool gameHasAI() override;
     void updateAI() override;
 
+    // Tournament support methods
+    void setBoardFromFEN(const std::string& fen);
+    BitMove getLastAIMove() const { return _lastAIMove; }
+    std::string getFEN() const;
+    int getCurrentPlayerColor() const { return _whiteToMove ? 1 : -1; }
+    BitMove _lastAIMove;
+
 private:
     
     using BoardArray = std::array<int, 66>;
@@ -80,6 +88,7 @@ private:
 
     bool _whiteToMove = true;
     std::vector<BitMove> _legalMoves;
+    std::map<std::string, int> _positionCount;
 
     // Extra game state
     int _enPassantSquare = -1;    

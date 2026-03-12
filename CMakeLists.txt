@@ -73,14 +73,15 @@ if(MACOS OR LINUX)
     target_link_libraries(demo ${OPENGL_gl_LIBRARY} glfw)
 elseif(WINDOWS)
     # Windows: Link DirectX11 and required Windows libraries
-    target_link_libraries(demo 
-        d3d11.lib 
-        d3dcompiler.lib 
-        dxgi.lib 
+    target_link_libraries(demo
+        d3d11.lib
+        d3dcompiler.lib
+        dxgi.lib
         dwmapi.lib
-        user32.lib 
-        gdi32.lib 
+        user32.lib
+        gdi32.lib
         winmm.lib
+        ws2_32
     )
 endif()
 
