@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="Win32-mingw32-make"
+	BuildStamp="20260212-1747-Experimental"
+	Name="IronDome"
+	Generator="ctest-4.2.1"
+	CompilerName="C:/mingw64/bin/g++.exe"
+	CompilerVersion="15.2.0"
+	OSName="Windows"
+	Hostname="IronDome"
+	OSRelease="10.0.26200"
+	OSVersion="Windows 10"
+	OSPlatform="AMD64"
+	Is64Bits="1"
+	VendorString="AuthenticAMD"
+	VendorID="Advanced Micro Devices"
+	FamilyID="15"
+	ModelID="1"
+	ModelName="AMD Ryzen 7 5700X 8-Core Processor"
+	ProcessorCacheSize="64"
+	NumberOfLogicalCPU="16"
+	NumberOfPhysicalCPU="8"
+	TotalVirtualMemory="34759"
+	TotalPhysicalMemory="32711"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="3401"
+	>
+	<Testing>
+		<StartDateTime>Mar 12 09:56 Pacific Daylight Time</StartDateTime>
+		<StartTestTime>1773334580</StartTestTime>
+		<TestList/>
+		<EndDateTime>Mar 12 09:56 Pacific Daylight Time</EndDateTime>
+		<EndTestTime>1773334580</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>
