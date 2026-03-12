@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"C:/CMPM123/CHESSAI/chess-123/build/cmake_install.cmake"
+		"C:/CMPM123/FinalChessAI/build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

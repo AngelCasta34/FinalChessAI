@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: C:/CMPM123/CHESSAI/chess-123
-BuildDirectory: C:/CMPM123/CHESSAI/chess-123/build
+SourceDirectory: C:/CMPM123/FinalChessAI
+BuildDirectory: C:/CMPM123/FinalChessAI/build
 
 # Where to place the cost data store
 CostDataFile: 
@@ -14,7 +14,7 @@ CostDataFile:
 Site: IronDome
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Win32-mingw32-make
+BuildName: Win32-MSBuild
 
 # Subprojects
 LabelsForSubprojects: 
@@ -27,8 +27,8 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "C:/Program Files/CMake/bin/cmake.exe" "C:/CMPM123/CHESSAI/chess-123"
-MakeCommand: C:/Program\ Files/CMake/bin/cmake.exe --build . --config "${CTEST_CONFIGURATION_TYPE}"
+ConfigureCommand: "C:/Program Files/CMake/bin/cmake.exe" "C:/CMPM123/FinalChessAI"
+MakeCommand: "C:\Program Files\CMake\bin\cmake.exe" --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
 # version control
@@ -63,8 +63,8 @@ UpdateOptions:
 UpdateType: git
 
 # Compiler info
-Compiler: C:/mingw64/bin/g++.exe
-CompilerVersion: 15.2.0
+Compiler: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/cl.exe
+CompilerVersion: 19.50.35723.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -98,7 +98,7 @@ TestLoad:
 TLSVerify: 
 TLSVersion: 
 
-UseLaunchers: 
+UseLaunchers: 0
 CurlOptions: 
 # warning, if you add new options here that have to do with submit,
 # you have to update cmCTestSubmitCommand.cxx
